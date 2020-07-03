@@ -13,9 +13,12 @@
 
 Board = Class{}
 
-function Board:init(x, y)
+function Board:init(x, y, level)
     self.x = x
     self.y = y
+
+    -- Level to determine the variety of tiles generated
+    self.level = level
     self.matches = {}
 
     self:initializeTiles()
@@ -31,8 +34,10 @@ function Board:initializeTiles()
 
         for tileX = 1, 8 do
             
+            -- Randomize the tile variety based on the level
+            local tileVariety = math.random(math.min(6, math.ceil(self.level/2)))
             -- create a new tile at X,Y with a random color and variety
-            table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(18), math.random(6)))
+            table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(18), tileVariety))
         end
     end
 
