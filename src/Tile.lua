@@ -11,9 +11,12 @@
     color and a variety, with the varietes adding extra points to the matches.
 ]]
 
+-- Embled image drawn onto a shiny tile
+local shinyEmblem = love.graphics.newImage('graphics/emblem.png')
+
 Tile = Class{}
 
-function Tile:init(x, y, color, variety)
+function Tile:init(x, y, color, variety, shiny)
     
     -- board positions
     self.gridX = x
@@ -26,6 +29,9 @@ function Tile:init(x, y, color, variety)
     -- tile appearance/points
     self.color = color
     self.variety = variety
+
+    -- if the tile is shiny or not
+    self.shiny = shiny
 end
 
 function Tile:render(x, y)
@@ -39,4 +45,9 @@ function Tile:render(x, y)
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.variety],
         self.x + x, self.y + y)
+
+    -- For shiny tile, draw a shiny tile embled
+    if self.shiny then
+        love.graphics.draw(shinyEmblem, self.x + x + 8 , self.y + y + 8 , 0 , 0.03, 0.03)
+    end
 end
