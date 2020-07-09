@@ -42,7 +42,7 @@ function Board:initializeTiles()
         end
     end
 
-    while self:calculateMatches() do
+    while self:calculateMatches(1, 8, 1, 8) do
         
         -- recursively initialize if matches were returned so we always have
         -- a matchless board on start
@@ -55,11 +55,11 @@ end
     tiles of the same color. Doesn't need to check the last tile in every row or column if the 
     last two haven't been a match.
 ]]
-function Board:calculateMatches()
+function Board:calculateMatches(yStart, yEnd, xStart, xEnd)
     local matches = {}
 
-    local horizontalMatches = self:horizontalMatchCalculation(2, 8)
-    local verticalMatches = self:verticalMatchCalculation(2, 8)
+    local horizontalMatches = self:horizontalMatchCalculation(yStart, yEnd)
+    local verticalMatches = self:verticalMatchCalculation(xStart, xEnd)
 
     for k, v in pairs(horizontalMatches) do
         table.insert(matches, v)
@@ -188,9 +188,8 @@ function Board:horizontalMatchCalculation(startPos, endPos)
 
     -- how many of the same color blocks in a row we've found
     local matchNum = 1
-
-    -- horizontal matches first
-    for y = 1, 8 do
+    -- horizontal matches 
+    for y = startPos, endPos do
         local colorToMatch = self.tiles[y][1].color
 
         -- To check if the current row has any shiny tile
@@ -199,7 +198,7 @@ function Board:horizontalMatchCalculation(startPos, endPos)
         matchNum = 1
         
         -- every horizontal tile
-        for x = startPos, endPos do
+        for x = 2, 8 do
             
             local currentTile = self.tiles[y][x]
             -- if this is the same color as the one we're trying to match...
@@ -276,7 +275,7 @@ function Board:verticalMatchCalculation(startPos, endPos)
     -- how many of the same color blocks in a row we've found
     local matchNum = 1
     -- vertical matches
-    for x = 1, 8 do
+    for x = startPos, endPos do
         local colorToMatch = self.tiles[1][x].color
         
         local isShinyPresent = false
@@ -284,7 +283,7 @@ function Board:verticalMatchCalculation(startPos, endPos)
         matchNum = 1
 
         -- every vertical tile
-        for y = startPos, endPos do
+        for y = 2, 8 do
             
             local currentTile = self.tiles[y][x]
 
