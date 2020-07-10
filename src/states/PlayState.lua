@@ -39,6 +39,9 @@ function PlayState:init()
     self.score = 0
     self.timer = 60
 
+    -- Boolean to check if the board should verified for any potential match
+    self.shouldVerifyBoard = true
+
     -- set our Timer class to turn cursor highlight on and off
     Timer.every(0.5, function()
         self.rectHighlighted = not self.rectHighlighted
@@ -105,6 +108,15 @@ function PlayState:update(dt)
         })
     end
 
+    if self.shouldVerifyBoard then
+        local boardValid = self:validateBoard()
+        print("Board Valid : " .. tostring(boardValid))
+        if not boardValid then
+            self.board:initializeTiles()
+            self.shouldVerifyBoard = true
+        end
+    end
+
     if self.canInput then
         -- move cursor around based on bounds of grid, playing sounds
         if love.keyboard.wasPressed('up') then
@@ -146,6 +158,7 @@ function PlayState:update(dt)
                 local currentTile = self.board.tiles[y][x]
                 self:swapTiles(self.highlightedTile, currentTile)
                 :finish(function()
+                    self.shouldVerifyBoard = true
                     local highlightedTile = self.highlightedTile
                     
                     local xStart, xEnd, yStart, yEnd = 1, 8, 1, 8
@@ -170,6 +183,7 @@ function PlayState:update(dt)
 
                     -- If not matches, revert the previous swap
                     if not self:calculateMatches(yStart, yEnd, xStart, xEnd) then
+                        self.shouldVerifyBoard = false
                         self:swapTiles(currentTile, highlightedTile)
                     end
                 end)
@@ -236,25 +250,31 @@ end
 ]]
 function PlayState:swapTiles(tile1, tile2)
 
-    -- swap grid positions of tiles
-    local tempX = tile1.gridX
-    local tempY = tile1.gridY
-
-    tile1.gridX = tile2.gridX
-    tile1.gridY = tile2.gridY
-
-    tile2.gridX = tempX
-    tile2.gridY = tempY
-
-    -- swap tiles in the tiles table
-    self.board.tiles[tile1.gridY][tile1.gridX] = tile1
-    self.board.tiles[tile2.gridY][tile2.gridX] = tile2
-
+    self:swapTilesWithoutTween(tile1, tile2)
     -- tween coordinates between the two so they swap
     return Timer.tween(0.1, {
         [tile1] = {x = tile2.x, y = tile2.y},
         [tile2] = {x = tile1.x, y = tile1.y}
     })
+end
+
+--[[
+    Swap without tween
+]]
+function PlayState:swapTilesWithoutTween(tile1, tile2)
+     -- swap grid positions of tiles
+     local tempX = tile1.gridX
+     local tempY = tile1.gridY
+ 
+     tile1.gridX = tile2.gridX
+     tile1.gridY = tile2.gridY
+ 
+     tile2.gridX = tempX
+     tile2.gridY = tempY
+ 
+     -- swap tiles in the tiles table
+     self.board.tiles[tile1.gridY][tile1.gridX] = tile1
+     self.board.tiles[tile2.gridY][tile2.gridX] = tile2
 end
 
 function PlayState:render()
@@ -297,4 +317,128 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 20, 52, 182, 'center')
     love.graphics.printf('Goal : ' .. tostring(self.scoreGoal), 20, 80, 182, 'center')
     love.graphics.printf('Timer: ' .. tostring(self.timer), 20, 108, 182, 'center')
+end
+
+--[[
+    Check if the board has any potential matches or not
+]]
+function PlayState:validateBoard()
+
+    local match = self:horizontalVerification(false)
+    if not match then
+        match = self:horizontalVerification(true)
+    end
+    if not match then
+        match = self:verticalVerification(false)
+    end
+    if not match then
+        match = self:verticalVerification(true)
+    end
+    return match
+end
+
+
+function PlayState:horizontalVerification(reverseCheck)
+
+    local anyMatchPresent = false
+
+    local xStart = 2
+    local xEnd = 8
+    local step = 1
+
+    if reverseCheck then
+        xStart = 7
+        xEnd = 1
+        step = -1
+    end
+
+    -- top down horizontal match first
+    for y = 1, 8 do
+
+        -- if a single match has been found, no need to check further
+        if anyMatchPresent then
+            break
+        end
+
+        for x = xStart, xEnd, step do
+
+            local prevTile = self.board.tiles[y][x-step]
+            local currentTile = self.board.tiles[y][x]
+
+            self:swapTilesWithoutTween(prevTile, currentTile)
+
+            if self.board:isMatchPresent(
+                currentTile.gridY,
+                currentTile.gridY,
+                math.min(currentTile.gridX, prevTile.gridX),
+                math.max(currentTile.gridX, prevTile.gridX)
+            ) then
+                print("Horizontal Match at " .. currentTile.gridY .. " " .. currentTile.gridX)
+                anyMatchPresent = true
+                -- Mark board verify flag to false as board is valid
+                self.shouldVerifyBoard = false
+                -- reverse the swap
+                self:swapTilesWithoutTween(prevTile, currentTile)
+                break;
+            else
+                self:swapTilesWithoutTween(prevTile, currentTile)
+            end
+        end
+    end
+
+    return anyMatchPresent
+end
+
+--[[
+    Check if the match exist in vertical swaps
+]]
+function PlayState:verticalVerification(reverseCheck)
+
+    local anyMatchPresent = false
+
+    local yStart = 2
+    local yEnd = 8
+    local step = 1
+
+    if reverseCheck then
+        yStart = 7
+        yStart = 1
+        step = -1
+    end
+
+    -- top down horizontal match first
+    for x = 1, 8 do
+
+        -- if a single match has been found, no need to check further
+        if anyMatchPresent then
+            break
+        end
+
+        for y = yStart, yEnd, step do
+
+            local prevTile = self.board.tiles[y-step][x]
+            local currentTile = self.board.tiles[y][x]
+
+            self:swapTilesWithoutTween(prevTile, currentTile)
+
+            if self.board:isMatchPresent(
+                math.min(currentTile.gridY, prevTile.gridY),
+                math.max(currentTile.gridY, prevTile.gridY),
+                currentTile.gridX,
+                currentTile.gridX
+            ) then
+                print("Vertical Match at " .. currentTile.gridY .. " " .. currentTile.gridX)
+                anyMatchPresent = true
+                -- Mark board verify flag to false as board is valid
+                self.shouldVerifyBoard = false
+                -- reverse the swap
+                self:swapTilesWithoutTween(prevTile, currentTile)
+                break;
+            else
+                self:swapTilesWithoutTween(prevTile, currentTile)
+            end
+        end
+    end
+
+    return anyMatchPresent
 end

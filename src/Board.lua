@@ -77,6 +77,17 @@ function Board:calculateMatches(yStart, yEnd, xStart, xEnd)
 end
 
 --[[
+    Check if there are any matches inside the given rows and column
+]]
+function Board:isMatchPresent(yStart, yEnd, xStart, xEnd)
+
+    local horizontalMatches = self:horizontalMatchCalculation(yStart, yEnd)
+    local verticalMatches = self:verticalMatchCalculation(xStart, xEnd)
+
+    return #horizontalMatches > 0 or #verticalMatches > 0
+end
+
+--[[
     Remove the matches from the Board by just setting the Tile slots within
     them to nil, then setting self.matches to nil.
 ]]
