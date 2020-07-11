@@ -83,3 +83,10 @@ function print_r ( t )
     end
     print()
 end
+
+--[[
+    Return push-converted mouse co-ordinates
+]]
+function getMouse()
+    return push:toGame(love.mouse.getPosition())
+end
