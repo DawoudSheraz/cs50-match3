@@ -142,6 +142,17 @@ function PlayState:update(dt)
     end
 
     if self.canInput then
+
+        mouseX, mouseY = getMouse()
+        if self:mouseInBound(mouseX, mouseY) then
+
+            -- Make mouse positions relative to board x and y so that
+            -- outline coordinates are calculated correctly
+            mouseY = mouseY - self.board.y
+            mouseX = mouseX - self.board.x
+            self.boardHighlightX, self.boardHighlightY = (math.floor(mouseX / 32) % 8) ,math.floor((mouseY / 32) % 8)
+        end
+        
         -- move cursor around based on bounds of grid, playing sounds
         if love.keyboard.wasPressed('up') then
             self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
@@ -156,9 +167,9 @@ function PlayState:update(dt)
             self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
             gSounds['select']:play()
         end
-
+        
         -- if we've pressed enter, to select or deselect a tile...
-        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') or self:validMousePress() then
             
             -- if same tile as currently highlighted, deselect
             local x = self.boardHighlightX + 1
@@ -479,4 +490,34 @@ function PlayState:boardResetMessageRender()
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.setFont(gFonts['medium'])
     love.graphics.printf('No Match Found. Resetting Board ', 0, self.boardResetMessageY, VIRTUAL_WIDTH, 'center')
+end
+
+--[[
+    Check if mouse position is in bounds of game and the board
+]]
+function PlayState:mouseInBound(mouseX, mouseY)
+    local inBound = true
+
+    if mouseX == nil or mouseY == nil then
+        inBound = false
+    end
+
+    -- Board Height check
+    if 16 > mouseY or mouseY > 272 then
+        inBound = false
+    end
+
+    -- Board Width check
+    if (VIRTUAL_WIDTH - 274) > mouseX or mouseX > 494 then
+        inBound = false
+    end
+
+    return inBound
+end
+
+--[[
+    Check if mouse primary was clicked
+]]
+function PlayState:validMousePress()
+    return self:mouseInBound(getMouse()) and love.mouse.wasClicked(1)
 end
