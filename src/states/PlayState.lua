@@ -42,6 +42,9 @@ function PlayState:init()
     -- Boolean to check if the board should verified for any potential match
     self.shouldVerifyBoard = true
 
+    -- Board Reset message position
+    self.boardResetMessageY = -90
+
     -- set our Timer class to turn cursor highlight on and off
     Timer.every(0.5, function()
         self.rectHighlighted = not self.rectHighlighted
@@ -109,11 +112,32 @@ function PlayState:update(dt)
     end
 
     if self.shouldVerifyBoard then
+        self.shouldVerifyBoard = false
         local boardValid = self:validateBoard()
         print("Board Valid : " .. tostring(boardValid))
+
+        -- If no more potential matches, stop the user input
+        -- and display the reset message. After reset message,
+        -- generate tiles and enable user input
         if not boardValid then
-            self.board:initializeTiles()
-            self.shouldVerifyBoard = true
+            self.canInput = false
+            Timer.tween(
+                1.0, {
+                    [self] = {boardResetMessageY = VIRTUAL_HEIGHT / 2 - 8}
+                }
+            )
+            :finish(function ()
+                Timer.tween(1.0, {
+                    [self] = {boardResetMessageY = -90}
+                }):finish(function ()
+                    self.board:initializeTiles()
+                    self.shouldVerifyBoard = true
+                    self.canInput = true
+                    -- Add 2 seconds timer that was wasted during tween
+                    self.timer = self.timer + 2
+                end)
+            end)
+            
         end
     end
 
@@ -317,6 +341,8 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 20, 52, 182, 'center')
     love.graphics.printf('Goal : ' .. tostring(self.scoreGoal), 20, 80, 182, 'center')
     love.graphics.printf('Timer: ' .. tostring(self.timer), 20, 108, 182, 'center')
+
+    self:boardResetMessageRender()
 end
 
 --[[
@@ -441,4 +467,16 @@ function PlayState:verticalVerification(reverseCheck)
     end
 
     return anyMatchPresent
+end
+
+--[[
+    Render the message indicating board reset
+]]
+function PlayState:boardResetMessageRender()
+
+    love.graphics.setColor(255, 0, 0, 200)
+    love.graphics.rectangle('fill', 0, self.boardResetMessageY - 8, VIRTUAL_WIDTH, 40)
+    love.graphics.setColor(255, 255, 255, 255)
+    love.graphics.setFont(gFonts['medium'])
+    love.graphics.printf('No Match Found. Resetting Board ', 0, self.boardResetMessageY, VIRTUAL_WIDTH, 'center')
 end
