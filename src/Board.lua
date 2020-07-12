@@ -212,6 +212,7 @@ function Board:horizontalMatchCalculation(startPos, endPos)
         for x = 2, 8 do
             
             local currentTile = self.tiles[y][x]
+            local counter = x
             -- if this is the same color as the one we're trying to match...
             if currentTile.color == colorToMatch then
                 matchNum = matchNum + 1
@@ -231,13 +232,13 @@ function Board:horizontalMatchCalculation(startPos, endPos)
                     -- If shiny tile present and matches found then
                     -- all the tiles in the rows should be cleared
                     if isShinyPresent then
-                        x = 9
+                        counter = 9
                         matchNum = 8
                     end
 
 
                     -- go backwards from here by matchNum
-                    for x2 = x - 1, x - matchNum, -1 do
+                    for x2 = counter - 1, counter - matchNum, -1 do
                         -- add each tile to the match that's in that match
                         table.insert(match, self.tiles[y][x2])
                     end
@@ -301,6 +302,7 @@ function Board:verticalMatchCalculation(startPos, endPos)
         for y = 2, 8 do
             
             local currentTile = self.tiles[y][x]
+            local counter = y
 
             if currentTile.color == colorToMatch then
                 matchNum = matchNum + 1
@@ -316,11 +318,11 @@ function Board:verticalMatchCalculation(startPos, endPos)
                     local match = {}
 
                     if isShinyPresent then
-                        y = 9
+                        counter = 9
                         matchNum = 8
                     end
 
-                    for y2 = y - 1, y - matchNum, -1 do
+                    for y2 = counter - 1, counter - matchNum, -1 do
                         table.insert(match, self.tiles[y2][x])
                     end
 
