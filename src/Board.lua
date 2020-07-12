@@ -244,6 +244,10 @@ function Board:horizontalMatchCalculation(startPos, endPos)
 
                     -- add this match to our total matches table
                     table.insert(matches, match)
+
+                    if isShinyPresent then
+                        break
+                    end
                 end
 
                 matchNum = 1
@@ -321,6 +325,9 @@ function Board:verticalMatchCalculation(startPos, endPos)
                     end
 
                     table.insert(matches, match)
+                    if isShinyPresent then
+                        break
+                    end
                 end
 
                 matchNum = 1
